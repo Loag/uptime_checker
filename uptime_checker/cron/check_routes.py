@@ -1,9 +1,9 @@
 # get routes from db and try and get them all async
 import grequests
 from datetime import datetime
-from uptime_checker.db import DB
 from threading import Thread
 from time import sleep
+from urllib.parse import urlparse
 
 class Checker:
   def __init__(self, db, sleep_time=30):
@@ -16,16 +16,17 @@ class Checker:
 
   def __save_results(self, results):
     # needs to be a tuple
+
     def gen_obj(input):
+      print(input[1].elapsed)
       return (
-        input[0][0],
+        input[0].id,
         str(input[1].ok),
         str(input[1].elapsed),
         datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
       )
 
     pings = list(map(gen_obj, results))
-    print(pings)
     return self.db.create_pings(pings)
 
   # iterate over all of the routes and check their uptime
@@ -33,8 +34,7 @@ class Checker:
     print("checking links now..")
     try:
       links = self.__get_all_links()
-      print(links)
-      res = grequests.map((grequests.get(u[1]) for u in links))
+      res = grequests.map((grequests.get(u.link) for u in links))
       return  self.__save_results(zip(links, res))
     except Exception as err:
       print(err)

@@ -1,4 +1,14 @@
 import sqlite3
+from uptime_checker.models.link import link_obj
+from uptime_checker.models.ping import ping_obj
+from urllib.parse import urlparse
+
+def is_valid_url(url):
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except Exception as err:
+        return False
 
 class DB:
   def __init__(self):
@@ -35,7 +45,7 @@ class DB:
 
   def get_links(self):
     try:
-      return self.cursor.execute(f'SELECT * FROM links').fetchall()
+      return list(map(link_obj, self.cursor.execute(f'SELECT * FROM links').fetchall()))
     except sqlite3.Error as err:
       print(str(err))
       return []
@@ -43,9 +53,11 @@ class DB:
   # return bool for success
   def create_link(self, link_data):
     try: 
-      self.cursor.execute('INSERT INTO links(link, created_at) VALUES(?,?)', link_data)
-      self.connection.commit()
-      return True
+      if is_valid_url(link_data[0]):
+        self.cursor.execute(f'INSERT INTO links(link ,created_at) VALUES(?,?)', link_data)
+        self.connection.commit()
+        return True
+      return False
     except sqlite3.Error as err:
       print(str(err))
       self.connection.rollback()
@@ -53,7 +65,7 @@ class DB:
 
   def get_pings(self, link_id):
     try:
-      return self.cursor.execute(f'SELECT * FROM pings WHERE link_id={link_id}').fetchall()
+      return list(map(ping_obj, self.cursor.execute(f'SELECT * FROM pings WHERE link_id={link_id}').fetchall()))
     except sqlite3.Error as err:
       print(str(err))
       return []

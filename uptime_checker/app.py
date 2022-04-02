@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, make_response
 from datetime import datetime
+from uptime_checker.models.shared import map_ser
 from uptime_checker.db import DB
 
 app = Flask(__name__)
@@ -12,13 +13,13 @@ def base():
 # return list of links, each can be clicked
 @app.route('/links', methods = ['GET']) 
 def get_links():
-  res = db.get_links()
+  res = map_ser(db.get_links())
   return __makeres({"data": res})
 
 # return pings for a link
 @app.route('/links/<link_id>', methods=['GET'])
 def get_link_pings(link_id):
-  res = db.get_pings(link_id)
+  res = map_ser(db.get_pings(link_id))
   return __makeres({"data": res})
 
 # create a new link to start pinging
