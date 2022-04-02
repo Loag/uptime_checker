@@ -1,0 +1,4 @@
+.DS_Store
+.venv
+uptime_checker.db
+__pycache__
